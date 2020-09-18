@@ -1,0 +1,19 @@
+{
+    "name": "jirkakyncl/vfk-importer",
+    "description": "Importer VFK souborů",
+    "config": {
+        "platform": {
+            "php": "7.2"
+        }
+    },
+    "type": "library",
+    "require": {
+        "ext-pgsql": "*"
+    },
+    "authors": [
+        {
+            "name": "Jiri Kyncl",
+            "email": "jirkakyncl@seznam.cz"
+        }
+    ]
+}
