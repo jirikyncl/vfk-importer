@@ -6,5 +6,5 @@ namespace VfkImporter;
 
 interface IExecutor
 {
-    public function execute(array $blockRows, array $dataRows): void;
+    public function execute(Vfk $vfk): void;
 }

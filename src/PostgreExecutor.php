@@ -9,10 +9,14 @@ class PostgreExecutor implements IExecutor
     const CONNECTION_STRING = "host=%s port=%s dbname=%s user=%s password=%s";
     const CREATE_TABLE_STRING = "CREATE TABLE IF NOT EXISTS %s ();";
     const ADD_COLUMN_STRING = "ALTER TABLE IF EXISTS %s ADD COLUMN IF NOT EXISTS %s %s;";
+    const TRUNCATE_TABLE_STRIING = "TRUNCATE TABLE %s;";
     const INSERT_DATA_STRING = "INSERT INTO %s VALUES(%s);";
+    const INSERT_PAGE_SIZE = 1;
 
     private $connection;
     private $schema = 'public';
+    private $createTables = true;
+    private $truncateTables = false;
 
     public function __construct(DbConfig $dbConfig)
     {
@@ -31,11 +35,13 @@ class PostgreExecutor implements IExecutor
         pg_close($this->connection);
     }
 
-    public function execute(array $blockRows, array $dataRows): void
+    public function execute(Vfk $vfk): void
     {
+        $this->checkBeforeExecute($vfk);
+
         $beginQueries = ["SET LOCAL search_path TO $this->schema;"];
-        $blockQueries = $this->createBlockQueries($blockRows);
-        $dataQueries = $this->createDataQueries($blockRows, $dataRows);
+        $blockQueries = $this->createBlockQueries($vfk);
+        $dataQueries = $this->createDataQueries($vfk);
         $initQueries = array_merge($beginQueries, $blockQueries);
         $initQueryString = implode(PHP_EOL, $initQueries);
 
@@ -43,68 +49,78 @@ class PostgreExecutor implements IExecutor
         $success = @pg_query($this->connection, $initQueryString);
 
         // Paging over data inserts
-        $chunkedDataQueries = array_chunk($dataQueries, 100);
+        $chunkedDataQueries = array_chunk($dataQueries, self::INSERT_PAGE_SIZE);
         foreach ($chunkedDataQueries as $chunk) {
             if (!$success) {
                 break;
             }
             $dataQueryString = implode(PHP_EOL, $chunk);
-            $success = @pg_query($this->connection, $dataQueryString);
+            $success = pg_query($this->connection, $dataQueryString);
         }
 
         if ($success) {
             pg_query($this->connection, "COMMIT");
         } else {
-            var_dump(pg_last_error($this->connection));
+            $err = pg_last_error($this->connection);
             pg_query($this->connection, "ROLLBACK");
+            throw new ExecuteException($err);
         }
     }
 
-    public function setSchema(string $schema): void
+    private function checkBeforeExecute(Vfk $vfk)
     {
-        $this->schema = $schema;
+        if (empty($vfk->dataRows) && empty($vfk->blockRows)) {
+            throw new ExecuteException("Nothing to execute");
+        }
     }
 
-    private function createBlockQueries(array $blockRows): array
+    private function createBlockQueries(Vfk $vfk): array
     {
         $queries = [];
 
-        foreach ($blockRows as $block) {
-            $queries[] = sprintf(self::CREATE_TABLE_STRING, $block->getTable());
+        foreach ($vfk->blockRows as $block) {
 
-            foreach ($block->getContent() as $columnDefinition) {
-                $length = $columnDefinition->length;
-                $type = "timestamp";
+            if ($this->createTables) {
+                $queries[] = sprintf(self::CREATE_TABLE_STRING, $block->getTable());
 
-                if ($columnDefinition->type === ColumnDefinition::TYPE_NUMBER) {
-                    $precisionParts = explode(".", $length);
-                    $precision = count($precisionParts) > 1
-                        ? $precisionParts[0] . "," . $precisionParts[1]
-                        : $precisionParts[0];
-                    $type = "numeric($precision)";
-                } elseif ($columnDefinition->type === ColumnDefinition::TYPE_STRING) {
-                    $type = "character varying($length)";
+                foreach ($block->getContent() as $columnDefinition) {
+                    $length = $columnDefinition->length;
+                    $type = "timestamp";
+
+                    if ($columnDefinition->type === ColumnDefinition::TYPE_NUMBER) {
+                        $precisionParts = explode(".", $length);
+                        $precision = count($precisionParts) > 1
+                            ? $precisionParts[0] . "," . $precisionParts[1]
+                            : $precisionParts[0];
+                        $type = "numeric($precision)";
+                    } elseif ($columnDefinition->type === ColumnDefinition::TYPE_STRING) {
+                        $type = "character varying($length)";
+                    }
+
+                    $queries[] = sprintf(self::ADD_COLUMN_STRING, $block->getTable(), $columnDefinition->name, $type);
                 }
+            }
 
-                $queries[] = sprintf(self::ADD_COLUMN_STRING, $block->getTable(), $columnDefinition->name, $type);
+            if ($this->truncateTables) {
+                $queries[] = sprintf(self::TRUNCATE_TABLE_STRIING, $block->getTable());
             }
         }
 
         return $queries;
     }
 
-    private function createDataQueries(array $blockRows, array $dataQueries): array
+    private function createDataQueries(Vfk $vfk): array
     {
         $queries = [];
         $blockColumnTypeIndex = [];
 
-        foreach ($blockRows as $block) {
+        foreach ($vfk->blockRows as $block) {
             $blockColumnTypeIndex[$block->getTable()] = array_map(function (ColumnDefinition $columnDefinition) {
                 return $columnDefinition->type;
             }, $block->getContent());
         }
 
-        foreach ($dataQueries as $data) {
+        foreach ($vfk->dataRows as $data) {
             $table = $data->getTable();
 
             $typedValues = implode(", ", array_map(function ($value, $index) use ($table, $blockColumnTypeIndex) {
@@ -118,5 +134,20 @@ class PostgreExecutor implements IExecutor
         }
 
         return $queries;
+    }
+
+    public function setSchema(string $schema): void
+    {
+        $this->schema = $schema;
+    }
+
+    public function setCreateTables(bool $createTables): void
+    {
+        $this->createTables = $createTables;
+    }
+
+    public function setTruncateTables(bool $truncateTables): void
+    {
+        $this->truncateTables = $truncateTables;
     }
 }

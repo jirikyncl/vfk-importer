@@ -17,9 +17,10 @@ class Importer
     {
         $parser = new Parser(file($filePath));
 
-        $this->executor->execute(
-            $parser->getRows(BlockRow::TYPE),
-            $dataRows = $parser->getRows(DataRow::TYPE)
-        );
+        $vfk = new Vfk();
+        $vfk->blockRows = $parser->getRows(BlockRow::TYPE);
+        $vfk->dataRows = $dataRows = $parser->getRows(DataRow::TYPE);
+
+        $this->executor->execute($vfk);
     }
 }

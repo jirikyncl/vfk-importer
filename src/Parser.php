@@ -21,7 +21,7 @@ class Parser
     {
         $rows = [];
         foreach ($this->rows as $row) {
-            $row = utf8_encode($row);
+            $row = utf8_encode(trim($row));
             if (strpos($row, "&$type") === 0) {
                 $rowArray = explode(";", str_replace('"', "", $row));
                 $table = strtolower(str_replace("&" . $type, "", $rowArray[0]));
