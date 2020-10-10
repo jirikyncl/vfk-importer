@@ -1,26 +1,36 @@
 <?php
 
-
 namespace VfkImporter;
 
-
+/**
+ * Class Importer
+ *
+ * @author Jiri Kyncl
+ */
 class Importer
 {
+    /** @var IExecutor */
     private $executor;
 
+    /**
+     * Importer constructor.
+     * @param IExecutor $executor
+     */
     public function __construct(IExecutor $executor)
     {
         $this->executor = $executor;
     }
 
-    public function run(string $filePath, string $schema = '', bool $createTables = false): void
+    /**
+     * Run import
+     * @param string $filePath
+     */
+    public function run(string $filePath): void
     {
         $parser = new Parser(file($filePath));
-
         $vfk = new Vfk();
-        $vfk->blockRows = $parser->getRows(BlockRow::TYPE);
-        $vfk->dataRows = $dataRows = $parser->getRows(DataRow::TYPE);
-
+        $vfk->blockRows = $parser->getParseRows(BlockRow::class);
+        $vfk->dataRows = $dataRows = $parser->getParseRows(DataRow::class);
         $this->executor->execute($vfk);
     }
 }

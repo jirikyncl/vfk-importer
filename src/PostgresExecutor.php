@@ -1,10 +1,13 @@
 <?php
 
-
 namespace VfkImporter;
 
-
-class PostgreExecutor implements IExecutor
+/**
+ * Class PostgresExecutor
+ *
+ * @author Jiri Kyncl
+ */
+class PostgresExecutor implements IExecutor
 {
     const CONNECTION_STRING = "host=%s port=%s dbname=%s user=%s password=%s";
     const CREATE_TABLE_STRING = "CREATE TABLE IF NOT EXISTS %s ();";
@@ -18,6 +21,10 @@ class PostgreExecutor implements IExecutor
     private $createTables = true;
     private $truncateTables = false;
 
+    /**
+     * PostgresExecutor constructor.
+     * @param DbConfig $dbConfig
+     */
     public function __construct(DbConfig $dbConfig)
     {
         $this->connection = pg_connect(sprintf(
@@ -30,11 +37,18 @@ class PostgreExecutor implements IExecutor
         ));
     }
 
+    /**
+     * Destruct
+     */
     public function __destruct()
     {
         pg_close($this->connection);
     }
 
+    /**
+     * Execute
+     * @param Vfk $vfk
+     */
     public function execute(Vfk $vfk): void
     {
         $this->checkBeforeExecute($vfk);
@@ -67,6 +81,10 @@ class PostgreExecutor implements IExecutor
         }
     }
 
+    /**
+     * Check VFK content
+     * @param Vfk $vfk
+     */
     private function checkBeforeExecute(Vfk $vfk)
     {
         if (empty($vfk->dataRows) && empty($vfk->blockRows)) {
@@ -74,6 +92,11 @@ class PostgreExecutor implements IExecutor
         }
     }
 
+    /**
+     * Create queries for block definitions
+     * @param Vfk $vfk
+     * @return string[]
+     */
     private function createBlockQueries(Vfk $vfk): array
     {
         $queries = [];
@@ -109,6 +132,11 @@ class PostgreExecutor implements IExecutor
         return $queries;
     }
 
+    /**
+     * Create queries for data
+     * @param Vfk $vfk
+     * @return string[]
+     */
     private function createDataQueries(Vfk $vfk): array
     {
         $queries = [];
@@ -136,16 +164,25 @@ class PostgreExecutor implements IExecutor
         return $queries;
     }
 
+    /**
+     * @param string $schema
+     */
     public function setSchema(string $schema): void
     {
         $this->schema = $schema;
     }
 
+    /**
+     * @param bool $createTables
+     */
     public function setCreateTables(bool $createTables): void
     {
         $this->createTables = $createTables;
     }
 
+    /**
+     * @param bool $truncateTables
+     */
     public function setTruncateTables(bool $truncateTables): void
     {
         $this->truncateTables = $truncateTables;

@@ -1,9 +1,12 @@
 <?php
 
-
 namespace VfkImporter;
 
-
+/**
+ * Class Parser
+ *
+ * @author Jiri Kyncl
+ */
 class Parser
 {
     const FORBIDDEN_HEADER_DATA_ROWS = [
@@ -12,12 +15,21 @@ class Parser
 
     private $rows;
 
+    /**
+     * Parser constructor.
+     * @param string[] $rows
+     */
     public function __construct(array $rows)
     {
         $this->rows = $rows;
     }
 
-    public function getRows(string $type)
+    /**
+     * Parse VFK rows by type
+     * @param string $type
+     * @return IRow[]
+     */
+    public function getParseRows(string $type)
     {
         $rows = [];
         foreach ($this->rows as $row) {
@@ -31,7 +43,7 @@ class Parser
                 }
 
                 $data = array_slice($rowArray, 1);
-                $class = (BlockRow::TYPE === $type ? BlockRow::class : DataRow::class);
+                $class = (BlockRow::class === $type ? BlockRow::class : DataRow::class);
                 $rows[] = new $class($table, $data);
             }
         }

@@ -4,7 +4,7 @@ Knihovna pro základní import souborů VFK do databáze (https://www.cuzk.cz/Ka
 
 ## Implementováno
 
-- Import do Postgre
+- Import do Postgres
 
 ## Podpora
 
@@ -20,11 +20,6 @@ Knihovna pro základní import souborů VFK do databáze (https://www.cuzk.cz/Ka
 
 **Popis:** https://geoportal.cuzk.cz/(S(lyqiqugzav0etp0whv154gis))/Default.aspx?mode=TextMeta&side=geo_plany&metadataID=CZ-00025712-CUZK_SERIES-MD_GMPL-KU-VFK&menu=2142
 
+## Použití
 
-## Instalace
-
-@TODO
-
-## TODO
-
-Kontrola verze
+Viz examples.

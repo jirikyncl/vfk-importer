@@ -1,20 +1,33 @@
 <?php
 
-
 namespace VfkImporter;
 
-
+/**
+ * Class ColumnDefinition
+ *
+ * @author Jiri Kyncl
+ */
 class ColumnDefinition
 {
     const TYPE_NUMBER = 'N';
     const TYPE_STRING = 'T';
     const TYPE_DATE = 'D';
 
+    /** @var string */
     public $type;
+
+    /** @var int */
     public $length;
+
+    /** @var string */
     public $name;
 
-    public static function fromString(string $colDefString)
+    /**
+     * Factory method
+     * @param string $colDefString
+     * @return ColumnDefinition
+     */
+    public static function createFromString(string $colDefString)
     {
         $parts = explode(" ", $colDefString);
         $obj = new ColumnDefinition();
