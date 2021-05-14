@@ -29,14 +29,15 @@ class Parser
      * @param string $type
      * @return IRow[]
      */
-    public function getParseRows(string $type)
+    public function getParsedRows(string $type)
     {
+        $prefix = (BlockRow::class === $type ? "B" : "D");
         $rows = [];
         foreach ($this->rows as $row) {
             $row = utf8_encode(trim($row));
-            if (strpos($row, "&$type") === 0) {
+            if (strpos($row, "&$prefix") === 0) {
                 $rowArray = explode(";", str_replace('"', "", $row));
-                $table = strtolower(str_replace("&" . $type, "", $rowArray[0]));
+                $table = strtolower(str_replace("&" . $prefix, "", $rowArray[0]));
 
                 if (in_array($table, self::FORBIDDEN_HEADER_DATA_ROWS)) {
                     continue;

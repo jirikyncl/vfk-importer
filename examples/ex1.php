@@ -20,9 +20,9 @@ require '../src/Vfk.php';
 $dbConfig = new DbConfig();
 $dbConfig->host = 'localhost';
 $dbConfig->port = '5432';
-$dbConfig->database = 'test';
-$dbConfig->username = 'test';
-$dbConfig->password = 'test';
+$dbConfig->database = 'liquibase_test';
+$dbConfig->username = 'liquibase_test_user';
+$dbConfig->password = 'liquibase_test_user_password';
 
 try {
     $executor = new PostgresExecutor($dbConfig);

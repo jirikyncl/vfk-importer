@@ -29,8 +29,8 @@ class Importer
     {
         $parser = new Parser(file($filePath));
         $vfk = new Vfk();
-        $vfk->blockRows = $parser->getParseRows(BlockRow::class);
-        $vfk->dataRows = $dataRows = $parser->getParseRows(DataRow::class);
+        $vfk->blockRows = $parser->getParsedRows(BlockRow::class);
+        $vfk->dataRows = $dataRows = $parser->getParsedRows(DataRow::class);
         $this->executor->execute($vfk);
     }
 }
