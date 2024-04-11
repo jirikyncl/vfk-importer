@@ -8,6 +8,8 @@ Knihovna pro základní import souborů VFK do databáze (https://www.cuzk.cz/Ka
 
 ## Podpora
 
+Je potřeba mít založenou databázi a případně schéma.
+
 ### Katastrální mapa ve formátu VFK
 
 **Ke stažení:** https://services.cuzk.cz/vfk/ku/

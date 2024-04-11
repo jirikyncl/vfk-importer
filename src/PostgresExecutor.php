@@ -117,6 +117,7 @@ class PostgresExecutor implements IExecutor
                             : $precisionParts[0];
                         $type = "numeric($precision)";
                     } elseif ($columnDefinition->type === ColumnDefinition::TYPE_STRING) {
+                        $length = $length + 10;
                         $type = "character varying($length)";
                     }
 
